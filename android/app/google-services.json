@@ -1,0 +1,19 @@
+{
+  "project_info": {
+    "project_number": "255464378462",
+    "project_id": "bookshelf-qe190072",
+    "storage_bucket": "bookshelf-qe190072.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:255464378462:android:f05779cba2cf4773e964cf",
+        "android_client_info": {"package_name": "vn.edu.bookshelf.bookshelf"}
+      },
+      "oauth_client": [],
+      "api_key": [{"current_key": "AIzaSyDm51cGTVkRHrck_RKuloIrMchfz6KP3HE"}],
+      "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+    }
+  ],
+  "configuration_version": "1"
+}

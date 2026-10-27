@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(data) {
+      return signedIn() && data.userId == request.auth.uid;
+    }
+
+    function normalizedHex(value) {
+      return value.trim().lower().toUtf8().toHexString();
+    }
+
+    function expectedId(data) {
+      return data.userId + '__' + normalizedHex(data.title) + '__' + normalizedHex(data.author);
+    }
+
+    function validBook(data, documentId) {
+      return data.keys().hasAll([
+          'id', 'userId', 'title', 'author', 'genre', 'status',
+          'favorite', 'notes', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'userId', 'title', 'author', 'genre', 'status',
+          'rating', 'favorite', 'notes', 'createdAt'
+        ])
+        && data.id is string
+        && data.id == documentId
+        && documentId == expectedId(data)
+        && data.userId is string
+        && data.title is string
+        && data.title.trim().size() > 0
+        && data.title.size() <= 100
+        && data.author is string
+        && data.author.trim().size() > 0
+        && data.author.size() <= 60
+        && data.genre is string
+        && data.genre in ['Fiction', 'Non-Fiction', 'Academic', 'Other']
+        && data.status is string
+        && data.status in ['To Read', 'Reading', 'Finished']
+        && (!data.keys().hasAny(['rating'])
+            || (data.rating is int && data.rating >= 0 && data.rating <= 5))
+        && data.favorite is bool
+        && data.notes is string
+        && data.notes.size() <= 300
+        && data.createdAt is timestamp;
+    }
+
+    match /books/{bookId} {
+      allow get, list: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && validBook(request.resource.data, bookId);
+      allow update: if owns(resource.data)
+        && owns(request.resource.data)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.createdAt == resource.data.createdAt
+        && validBook(request.resource.data, bookId);
+      allow delete: if owns(resource.data);
+    }
+  }
+}
