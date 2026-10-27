@@ -35,24 +35,28 @@ class BookService {
   }) async {
     final id = idFor(userId, title, author);
     final ref = _books.doc(id);
-    await _firestore.runTransaction((transaction) async {
-      if ((await transaction.get(ref)).exists) {
+    final book = Book(
+      id: id,
+      userId: userId,
+      title: title.trim(),
+      author: author.trim(),
+      genre: genre,
+      status: status,
+      rating: rating,
+      favorite: false,
+      notes: notes,
+      createdAt: DateTime.now(),
+    );
+    try {
+      await ref.set(book.toMap());
+    } on FirebaseException catch (error) {
+      // With deterministic IDs, a duplicate set is evaluated as an update.
+      // Security Rules reject it because createdAt is immutable.
+      if (error.code == 'permission-denied') {
         throw const DuplicateBookException();
       }
-      final book = Book(
-        id: id,
-        userId: userId,
-        title: title.trim(),
-        author: author.trim(),
-        genre: genre,
-        status: status,
-        rating: rating,
-        favorite: false,
-        notes: notes,
-        createdAt: DateTime.now(),
-      );
-      transaction.set(ref, book.toMap());
-    });
+      rethrow;
+    }
   }
 
   Future<Book> updateBook(Book original, Book updated) async {
