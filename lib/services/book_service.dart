@@ -14,7 +14,9 @@ class BookService {
   static String idFor(String userId, String title, String author) {
     String hex(String value) => utf8
         .encode(value.trim().toLowerCase())
-        .map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase())
+        // Firestore Rules' ByteValue.toHexString() uses lowercase hex.
+        // Keep this identifier byte-for-byte identical to the Rules formula.
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
         .join();
     return '${userId}__${hex(title)}__${hex(author)}';
   }
